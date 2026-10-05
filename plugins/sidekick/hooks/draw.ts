@@ -288,6 +288,10 @@ const wrapText = (text: string, max: number) => {
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
 // karakter y = -30..220 arası çizilir; balon onun üstüne konur
+// Çizimin yerleşimi: balon varsa üstüne yer açılır; uyurken balon yok, karakter 250 birim yüksekliğinde
+export const layoutFor = (text: string, m: Mood) =>
+  m === 'sleepy' ? { top: -30, total: 250 } : bubbleMetrics(text)
+
 export const bubbleMetrics = (text: string) => {
   const lines = wrapText(text, 30)
   const h = lines.length * 14 + 16
@@ -365,9 +369,13 @@ export const characterSvg = (w: Who, m: Mood, isTalking: boolean, outfit: string
       `<g>${move('translate', '0 0;0 -10;0 0', '0.3s', true)}${body}</g></g>`
   }
 
-  const { top, total } = bubbleMetrics(text)
+  // uyurken balon yok: kimse konuşmuyor
+  const { top, total } = layoutFor(text, m)
   const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 ${top} 200 ${total}">` + bubbleSvg(text) + body + '</svg>'
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 ${top} 200 ${total}">` +
+    (m === 'sleepy' ? '' : bubbleSvg(text)) +
+    body +
+    '</svg>'
 
   // her animasyonu saat fazına göre başlat: SVG yeniden yüklendiğinde sıfırlanmak yerine kaldığı yerden devam eder
   return svg.replace(/dur="([\d.]+)s"/g, (hit, d) => `${hit} begin="-${(ctx.phase % parseFloat(d)).toFixed(3)}s"`)

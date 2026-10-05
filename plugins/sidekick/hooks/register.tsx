@@ -2,7 +2,7 @@ import { atom, read, update } from 'claude-code'
 import type { Register } from 'claude-code'
 
 import type { Level, Mood, Who } from '../types'
-import { bubbleMetrics, characterSvg, ctx, outfitFor } from './draw'
+import { characterSvg, ctx, layoutFor, outfitFor } from './draw'
 import { CLOSE_LABEL, GESTURES, HELLO, LEVELS, PERSONA, SAY, SYSTEM, TITLE, VERBS } from './lines'
 import { RH, RW, clippyRaster } from './raster'
 import { SOUND_MODES, clipFor } from './sound'
@@ -604,9 +604,11 @@ export const register: Register = on => {
           <Box alignSelf="center">
             <Text bold>{TITLE[w]}</Text>
           </Box>
-          <Box borderStyle="round" paddingX={1}>
-            <Text>{text}</Text>
-          </Box>
+          {m === 'sleepy' ? null : (
+            <Box borderStyle="round" paddingX={1}>
+              <Text>{text}</Text>
+            </Box>
+          )}
           <Box alignSelf="center" position="relative">
             <Raster key="clippy" columns={RW} rows={RH / 2} cells={cells} />
             <Box position="absolute" top={0} left={0} right={0} height={RH / 2}>
@@ -624,7 +626,7 @@ export const register: Register = on => {
     ctx.phase = (await $.clock.now()) / 1000
     ctx.scanMode = r.running && !isTalking ? 'read' : 'idle'
     ctx.gestureNow = await read($, gest)
-    const bm = bubbleMetrics(text)
+    const bm = layoutFor(text, m)
     const svgRows = Math.ceil((300 * bm.total) / 200 / 17.5) + 1
     const centerRow = Math.round((95 - bm.top) * 1.5 / 17.5)
 

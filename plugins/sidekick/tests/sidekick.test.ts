@@ -204,3 +204,17 @@ test('sakin komut panik üretmez', async ($, on) => {
   expect(svg.props.source).not.toContain('#38bdf8')
   await ui.unmount()
 })
+
+test('uyurken konuşma balonu çizilmez, uyanıkken çizilir', async () => {
+  const { characterSvg, ctx } = await import('../hooks/draw')
+  ctx.phase = 0
+  ctx.scanMode = 'idle'
+  ctx.gestureNow = ''
+  const sleeping = characterSvg('clippy', 'sleepy', false, 'day', false, 'Bir şey söylüyorum')
+  const awake = characterSvg('clippy', 'normal', false, 'day', false, 'Bir şey söylüyorum')
+  expect(sleeping).not.toContain('#ffffe1') // balon rengi yok
+  expect(sleeping).not.toContain('Bir şey söylüyorum')
+  expect(sleeping).toContain('Zzz')
+  expect(awake).toContain('#ffffe1')
+  expect(awake).toContain('Bir şey söylüyorum')
+})
