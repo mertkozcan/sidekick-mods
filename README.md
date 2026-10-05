@@ -16,7 +16,7 @@ ve **Java** (kahve bardağı).
 ### Kurulum
 
 ```
-claude plugin marketplace add <bu-deponun-yolu-veya-github-owner/repo>
+claude plugin marketplace add mertkozcan/sidekick-mods
 claude plugin install sidekick@sidekick-mods
 ```
 
