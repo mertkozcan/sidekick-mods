@@ -1,11 +1,12 @@
 import { atom, read, update } from 'claude-code'
 import type { Register } from 'claude-code'
 
-import type { Level, Mood, Who } from '../types'
+import type { Level, Mood, Who, Xox } from '../types'
 import { characterSvg, ctx, layoutFor, outfitFor } from './draw'
 import { CLOSE_LABEL, GESTURES, HELLO, LEVELS, PERSONA, SAY, SYSTEM, TITLE, VERBS } from './lines'
 import { RH, RW, clippyRaster } from './raster'
 import { SOUND_MODES, clipFor } from './sound'
+import { EMPTY, XOX, play } from './xox'
 
 const PANE = 'sidekick'
 const frame = atom({ plugin: 'sidekick', key: 'frame' } as const, 0)
@@ -20,6 +21,7 @@ const gaze = atom({ plugin: 'sidekick', key: 'gaze' } as const, { gx: 0, gy: 0 }
 const sound = atom({ plugin: 'sidekick', key: 'sound' } as const, 0)
 const gest = atom({ plugin: 'sidekick', key: 'gest' } as const, '')
 const run = atom({ plugin: 'sidekick', key: 'run' } as const, { running: false, elapsed: 0, tool: '' })
+const xox = atom({ plugin: 'sidekick', key: 'xox' } as const, { on: false, board: EMPTY, result: '' } as Xox)
 
 const pick = <T,>(xs: T[]): T => xs[Math.floor(Math.random() * xs.length)]
 
@@ -159,7 +161,7 @@ const switchTo = async ($: any, name: Who) => {
 const own = (o: object, k: string) => Object.prototype.hasOwnProperty.call(o, k)
 
 const USAGE =
-  'Kullanım: /sidekick [clippy | stajyer | java | sessiz | normal | sinir | ses [kapali|bip|konusma] | yardim]'
+  'Kullanım: /sidekick [clippy | stajyer | java | sessiz | normal | sinir | ses [kapali|bip|konusma] | xox | yardim]'
 
 const CHARS: Record<string, Who> = {
   clippy: 'clippy',
@@ -203,6 +205,8 @@ const sidekickCommand = async ($: any, raw: string) => {
     return { text: `Sinir seviyesi: ${LEVELS[next]}.` }
   }
 
+  if (head === 'xox' || head === 'oyun') return xoxToggle($)
+
   if (head === 'ses') {
     const cur = await read($, sound)
     const next = rest === '' ? (cur + 1) % 3 : own(SOUND_WORDS, rest) ? SOUND_WORDS[rest] : undefined
@@ -223,6 +227,49 @@ const sidekickCommand = async ($: any, raw: string) => {
   }
 
   return { text: `Bilmiyorum: "${raw.trim()}". ${USAGE}` }
+}
+
+// XOX: oyunu aç/kapat ve oyuncunun hamlesini işle
+const xoxToggle = async ($: any) => {
+  const g = await read($, xox)
+
+  if (g.on) {
+    await update($, xox, () => ({ on: false, board: EMPTY, result: '' }))
+    await sayText($, pick(XOX.quit), 'laugh', 2500)
+
+    return { text: 'XOX bitti.' }
+  }
+
+  await update($, xox, () => ({ on: true, board: EMPTY, result: '' }))
+  await wake($)
+  await sayText($, pick(XOX.start), 'happy', 2500)
+
+  return { text: 'XOX başladı: sen X, ben O.' }
+}
+
+const xoxMove = async ($: any, i: number) => {
+  const g = await read($, xox)
+
+  if (!g.on) return
+
+  // oyun bittiyse bir sonraki tıklama yeni oyun başlatır
+  if (g.result !== '') {
+    await update($, xox, () => ({ on: true, board: EMPTY, result: '' }))
+    await sayText($, pick(XOX.start), 'happy', 2500)
+
+    return
+  }
+
+  const r = play(g.board, i)
+
+  if (!r.moved) return
+
+  await wake($)
+  await update($, xox, () => ({ on: true, board: r.board, result: r.result }))
+
+  if (r.result === 'X') await sayText($, pick(XOX.lose), 'cry', 6000)
+  else if (r.result === 'O') await sayText($, pick(XOX.win), 'laugh', 4000)
+  else if (r.result === 'draw') await sayText($, pick(XOX.draw), 'angry', 3500)
 }
 
 const basename = (p: string) => p.split(/[\\/]/).pop() || p
@@ -257,7 +304,7 @@ export const register: Register = on => {
     await $.command.register({
       name: 'sidekick',
       description: 'Yan arkadaşı aç; karakteri, sinir seviyesini ve sesi seç',
-      argumentHint: '[clippy|stajyer|java|sessiz|normal|sinir|ses|yardim]',
+      argumentHint: '[clippy|stajyer|java|sessiz|normal|sinir|ses|xox|yardim]',
     })
 
     void $.ui.open({ id: PANE, title: TITLE[await read($, who)] })
@@ -329,7 +376,14 @@ export const register: Register = on => {
 
       if (isWalking && now > walkUntil) {
         await update($, walk, () => false)
-      } else if (!isWalking && lv > 0 && m === 'normal' && now > nextWalk && !(await read($, talking))) {
+      } else if (
+        !isWalking &&
+        lv > 0 &&
+        m === 'normal' &&
+        now > nextWalk &&
+        !(await read($, talking)) &&
+        !(await read($, xox)).on
+      ) {
         await update($, walk, () => true)
         walkUntil = now + 12000
         nextWalk = now + (lv === 2 ? 25000 : 50000) + Math.random() * (lv === 2 ? 25000 : 50000)
@@ -571,6 +625,37 @@ export const register: Register = on => {
       />
     )
 
+    const g = await read($, xox)
+
+    const xoxBtn = (
+      <Button key="xox" label={g.on ? 'XOX: Bırak' : 'XOX'} onPress={act(async () => void (await xoxToggle($)))} />
+    )
+
+    const board = g.on ? (
+      <Box flexDirection="column" alignItems="center">
+        {[0, 1, 2].map(row => (
+          <Box key={`row${row}`} flexDirection="row" gap={1}>
+            {[0, 1, 2].map(col => {
+              const i = row * 3 + col
+
+              return (
+                <Button
+                  key={`c${i}`}
+                  label={g.board[i] === ' ' ? '·' : g.board[i]}
+                  onPress={act(async () => {
+                    await xoxMove($, i)
+                  })}
+                />
+              )
+            })}
+          </Box>
+        ))}
+        <Text dimColor>
+          {g.result === 'X' ? 'Sen kazandın' : g.result === 'O' ? 'Ben kazandım' : g.result === 'draw' ? 'Berabere' : 'Sıra sende (X)'}
+        </Text>
+      </Box>
+    ) : null
+
     const footer = (
       <Box flexDirection="column" gap={1} alignItems="center">
         {Client ? (
@@ -584,11 +669,13 @@ export const register: Register = on => {
         ) : (
           <Text>{r.running ? `Çalışıyor · ${r.tool || '...'}` : 'Boşta. Ben de.'}</Text>
         )}
+        {board}
         <Text dimColor>{`Araç ${s.tools} · Tur ${s.turns}`}</Text>
         <Box flexDirection="row" gap={1} flexWrap="wrap" justifyContent="center">
           {poke}
           {levelBtn}
           {soundBtn}
+          {xoxBtn}
         </Box>
         {dodge}
       </Box>

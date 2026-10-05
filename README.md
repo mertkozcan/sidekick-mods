@@ -12,6 +12,7 @@ ve **Java** (kahve bardağı).
 - Çalışırken dönen komik fiiller ve süre, boştayken rastgele jestler
 - Tehlikeli komuta panik, test sonucuna tepki, düzenlenen koda bakıp yorum, commit/mola/bağlam hatırlatması
 - Fare takibi, isteğe bağlı ses (bip ya da konuşma)
+- XOX oyunu: kazanırsan ağlar, kaybedersen seninle dalga geçer
 
 ### Kurulum
 
@@ -31,6 +32,7 @@ panel yan tarafta kendiliğinden açılır.
 | `/sidekick clippy`, `stajyer`, `java` | karakteri değiştirir |
 | `/sidekick sessiz`, `normal`, `sinir` | ne kadar sık konuşacağını ayarlar |
 | `/sidekick ses [kapali\|bip\|konusma]` | sesi ayarlar (varsayılan: kapalı) |
+| `/sidekick xox` | XOX oyunu açar/kapatır (sen X, karakter O; yenilince ağlar ve hileci der) |
 | `/sidekick yardim` | kullanımı ve durumu gösterir |
 
 ### Bilmeniz gerekenler

@@ -1,6 +1,6 @@
 {
   "name": "sidekick",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Kod yazarken yanında duran, eğlendiren, arada yardım eden yan arkadaş: Clippy, Stajyer ve Java karakterleri",
   "author": { "name": "Mert Kaan Özcan" },
   "license": "MIT",

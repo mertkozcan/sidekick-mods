@@ -155,6 +155,9 @@ export const clippyRaster = (
   if (m === 'angry') {
     stroke(line(32, 40, 55, 53), INK)
     stroke(line(65, 53, 88, 40), INK)
+  } else if (m === 'cry') {
+    stroke(line(32, 48, 56, 34), INK)
+    stroke(line(64, 34, 88, 48), INK)
   } else if (m !== 'sleepy') {
     stroke([...line(32, 46 + lift, 44, 41 + lift), ...line(44, 41 + lift, 56, 46 + lift)], INK)
     stroke([...line(64, 46 + lift, 76, 41 + lift), ...line(76, 41 + lift, 88, 46 + lift)], INK)
@@ -162,7 +165,13 @@ export const clippyRaster = (
 
   const flap = isTalking || m === 'laugh'
 
+  if (m === 'cry') {
+    ell(40, 84 + (flapFrame ? 8 : 0), 3, 5, 0x7dd3fc)
+    ell(80, 92 - (flapFrame ? 8 : 0), 3, 5, 0x7dd3fc)
+  }
+
   if (m === 'panic') ell(60, 98, 7, 9, 0x7f1d1d)
+  else if (m === 'cry') stroke([...line(48, 102, 60, 91), ...line(60, 91, 72, 102)], INK)
   else if (flap) ell(60, 97, 10, flapFrame ? 8 : 3, 0x7f1d1d)
   else if (m === 'happy') stroke([...line(46, 92, 60, 104), ...line(60, 104, 74, 92)], INK)
   else if (m === 'angry') stroke([...line(50, 101, 60, 93), ...line(60, 93, 70, 101)], INK)

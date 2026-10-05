@@ -56,7 +56,9 @@ export const clipFor = (w: Who, m: Mood) => {
             ? [[base * 0.6, 160], [base * 0.5, 160]]
             : m === 'sleepy'
               ? [[base * 0.5, 220]]
-              : [[base, 70], [base * 1.5, 90]]
+              : m === 'cry'
+                ? [[base * 0.9, 140], [base * 0.7, 140], [base * 0.9, 140], [base * 0.6, 200]]
+                : [[base, 70], [base * 1.5, 90]]
     CLIPS[key] = synthWav(segs)
   }
 

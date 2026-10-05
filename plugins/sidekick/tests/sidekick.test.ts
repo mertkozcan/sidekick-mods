@@ -218,3 +218,54 @@ test('uyurken konuşma balonu çizilmez, uyanıkken çizilir', async () => {
   expect(awake).toContain('#ffffe1')
   expect(awake).toContain('Bir şey söylüyorum')
 })
+
+test('XOX mantığı: kazanan, beraberlik, geçersiz hamle, rakip kazanmaya hamle yapar', async () => {
+  const { outcome, play, botMove, EMPTY } = await import('../hooks/xox')
+  expect(outcome('XXXOO    ')).toBe('X')
+  expect(outcome('OXXXOXXOO')).toBe('O')
+  expect(outcome('XOXXOOOXX')).toBe('draw')
+  expect(outcome(EMPTY)).toBe('')
+  // dolu kareye ve tahta dışına oynanamaz
+  const a = play(EMPTY, 4, () => 0.99)
+  expect(a.moved).toBe(true)
+  expect(play(a.board, 4).moved).toBe(false)
+  expect(play(a.board, 9).moved).toBe(false)
+  expect(play(a.board, -1).moved).toBe(false)
+  // kazanabiliyorsa kazanır (rnd=0: her şans geçer)
+  expect(botMove('OO XX    ', () => 0)).toBe(2)
+  // oyuncu üç taşı dizerse biter
+  expect(play('XX OO    ', 2, () => 0).result).toBe('X')
+})
+
+test('XOX: komutla açılır, tahta çizilir; kapanır', async ($, on) => {
+  stubs(on)
+  expect((await run($, 'xox')).text).toContain('başladı')
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  for (let i = 0; i < 9; i++) expect(await ui.find({ key: `c${i}` })).toBeDefined()
+  expect((await ui.find({ key: 'xox' })).props.label).toBe('XOX: Bırak')
+  await ui.unmount()
+  expect((await run($, 'xox')).text).toContain('bitti')
+  expect((await run($, 'yardim')).text).toContain('xox')
+})
+
+test('ağlama yüzü: gözyaşı çizilir, panik rengi kullanılmaz', async () => {
+  const { characterSvg, ctx } = await import('../hooks/draw')
+  ctx.phase = 0
+  ctx.scanMode = 'idle'
+  ctx.gestureNow = ''
+  const s = characterSvg('clippy', 'cry', false, 'day', false, 'Hileci!')
+  expect(s).toContain('#7dd3fc')
+  expect(s).not.toContain('#38bdf8')
+})
+
+test('XOX: kareye basınca X konur, rakip karşılık verir', async ($, on) => {
+  stubs(on)
+  await run($, 'xox')
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: 'c4' })
+  expect((await ui.find({ key: 'c4' })).props.label).toBe('X')
+  let o = 0
+  for (let i = 0; i < 9; i++) if ((await ui.find({ key: `c${i}` })).props.label === 'O') o++
+  expect(o).toBe(1)
+  await ui.unmount()
+})
