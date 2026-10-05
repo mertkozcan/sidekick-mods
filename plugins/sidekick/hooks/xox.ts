@@ -51,14 +51,26 @@ export const botMove = (b: string, rnd: () => number = Math.random) => {
   return free[Math.floor(rnd() * free.length)]
 }
 
+// Hile: tahtadaki X ve O'ların yerini değiştirir; oyuncunun kazanan dizisi karakterin dizisi olur
+export const swapMarks = (b: string) => [...b].map(c => (c === 'X' ? 'O' : c === 'O' ? 'X' : c)).join('')
+
+// Yeni oyun: önceki oyunu kaybeden başlar (oyuncu kazandıysa karakter, aksi halde oyuncu)
+export const newGame = (prev: Outcome, rnd: () => number = Math.random) =>
+  prev === 'X' ? put(EMPTY, botMove(EMPTY, rnd), 'O') : EMPTY
+
 // Oyuncu hamlesi + karakterin cevabı. Geçersiz hamlede tahtayı değiştirmez.
-export const play = (b: string, i: number, rnd: () => number = Math.random) => {
+// cheat: oyuncu bu hamleyle kazanacaksa karakter X ve O'ları değiştirip kendini kazandırır.
+export const play = (b: string, i: number, rnd: () => number = Math.random, cheat = false) => {
   if (!Number.isInteger(i) || i < 0 || i > 8 || b[i] !== ' ' || outcome(b) !== '') {
-    return { board: b, result: outcome(b), moved: false }
+    return { board: b, result: outcome(b), moved: false, cheated: false }
   }
 
   let next = put(b, i, 'X')
   let result = outcome(next)
+
+  if (result === 'X' && cheat) {
+    return { board: swapMarks(next), result: outcome(swapMarks(next)), moved: true, cheated: true }
+  }
 
   if (result === '') {
     const j = botMove(next, rnd)
@@ -66,7 +78,7 @@ export const play = (b: string, i: number, rnd: () => number = Math.random) => {
     result = outcome(next)
   }
 
-  return { board: next, result, moved: true }
+  return { board: next, result, moved: true, cheated: false }
 }
 
 export const XOX = {
@@ -89,6 +101,17 @@ export const XOX = {
     'XOX\'te yenildin. Bir de kod yazıyorsun, değil mi?',
     'Bu kadar mı? Rakip aramaya devam ederim.',
     'Üçlü yaptım. Sana da teselli olarak bir X kaldı.',
+  ],
+  // üst üste yenilince hile: X ve O yer değiştirir
+  cheat: [
+    "Bir dakika... aslında şu X'ler O'ydu, O'lar da X. Bak, ben kazandım. Sayılır.",
+    'Tahtayı ters çevirdim. Şimdi bakınca ben kazanmışım. Tesadüf.',
+    'Üst üste üç kez kaybetmek istatistiksel olarak mümkün değil. Düzelttim.',
+    "Dikkat dağıtıcı bir şey gördün mü? Ben X'leri O yaptım, sen bakmadan.",
+  ],
+  botStart: [
+    'Kaybeden başlar, kural bu. Ben başlıyorum.',
+    'Sen kazandın, sıra bende. İntikam zamanı.',
   ],
   draw: [
     'Berabere. Kimse kazanmadı, yani ben kaybetmedim.',

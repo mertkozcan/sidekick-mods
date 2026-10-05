@@ -288,3 +288,31 @@ test('her karakter ve ruh hali için SVG geçerli: aynı etikette tekrar eden ö
     }
   }
 })
+
+test('XOX hilesi: oyuncu kazanacaksa X ve O yer değiştirir, karakter kazanır', async () => {
+  const { play, swapMarks, outcome } = await import('../hooks/xox')
+  expect(swapMarks('XO XO    ')).toBe('OX OX    ')
+  // oyuncu 2. kareye oynarsa üst sırayı tamamlar (X X X)
+  const honest = play('XX OO    ', 2, () => 0, false)
+  expect(honest.result).toBe('X')
+  expect(honest.cheated).toBe(false)
+  const cheat = play('XX OO    ', 2, () => 0, true)
+  expect(cheat.cheated).toBe(true)
+  expect(cheat.result).toBe('O')
+  expect(cheat.board).toBe('OOOXX    ')
+  expect(outcome(cheat.board)).toBe('O')
+  // kazanmayan hamlede hile devreye girmez
+  const calm = play('         ', 4, () => 0.99, true)
+  expect(calm.cheated).toBe(false)
+})
+
+test('XOX: önceki oyunu kaybeden başlar', async () => {
+  const { newGame, EMPTY } = await import('../hooks/xox')
+  // oyuncu kazandıysa karakter başlar: tahtada tek bir O var
+  const afterWin = newGame('X', () => 0.5)
+  expect([...afterWin].filter(c => c === 'O').length).toBe(1)
+  expect([...afterWin].filter(c => c === 'X').length).toBe(0)
+  // karakter kazandıysa ya da berabereyse oyuncu başlar: tahta boş
+  expect(newGame('O')).toBe(EMPTY)
+  expect(newGame('draw')).toBe(EMPTY)
+})

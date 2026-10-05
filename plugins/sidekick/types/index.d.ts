@@ -4,7 +4,7 @@ export type Level = 0 | 1 | 2
 export type Who = 'clippy' | 'stajyer' | 'java'
 export type Stats = { tools: number; turns: number; escapes: number; pokes: number }
 export type Run = { running: boolean; elapsed: number; tool: string }
-export type Xox = { on: boolean; board: string; result: string }
+export type Xox = { on: boolean; board: string; result: string; streak: number; cheated: boolean }
 
 declare module 'claude-code' {
   interface PluginState {

@@ -6,7 +6,7 @@ import { characterSvg, ctx, layoutFor, outfitFor } from './draw'
 import { CLOSE_LABEL, GESTURES, HELLO, LEVELS, PERSONA, SAY, SYSTEM, TITLE, VERBS } from './lines'
 import { RH, RW, clippyRaster } from './raster'
 import { SOUND_MODES, clipFor } from './sound'
-import { EMPTY, XOX, play } from './xox'
+import { EMPTY, XOX, newGame, play } from './xox'
 
 const PANE = 'sidekick'
 const frame = atom({ plugin: 'sidekick', key: 'frame' } as const, 0)
@@ -21,7 +21,7 @@ const gaze = atom({ plugin: 'sidekick', key: 'gaze' } as const, { gx: 0, gy: 0 }
 const sound = atom({ plugin: 'sidekick', key: 'sound' } as const, 0)
 const gest = atom({ plugin: 'sidekick', key: 'gest' } as const, '')
 const run = atom({ plugin: 'sidekick', key: 'run' } as const, { running: false, elapsed: 0, tool: '' })
-const xox = atom({ plugin: 'sidekick', key: 'xox' } as const, { on: false, board: EMPTY, result: '' } as Xox)
+const xox = atom({ plugin: 'sidekick', key: 'xox' } as const, { on: false, board: EMPTY, result: '', streak: 0, cheated: false } as Xox)
 
 const pick = <T,>(xs: T[]): T => xs[Math.floor(Math.random() * xs.length)]
 
@@ -230,17 +230,19 @@ const sidekickCommand = async ($: any, raw: string) => {
 }
 
 // XOX: oyunu aç/kapat ve oyuncunun hamlesini işle
+const XOX_OFF = { on: false, board: EMPTY, result: '', streak: 0, cheated: false }
+
 const xoxToggle = async ($: any) => {
   const g = await read($, xox)
 
   if (g.on) {
-    await update($, xox, () => ({ on: false, board: EMPTY, result: '' }))
+    await update($, xox, () => XOX_OFF)
     await sayText($, pick(XOX.quit), 'laugh', 2500)
 
     return { text: 'XOX bitti.' }
   }
 
-  await update($, xox, () => ({ on: true, board: EMPTY, result: '' }))
+  await update($, xox, () => ({ ...XOX_OFF, on: true }))
   await wake($)
   await sayText($, pick(XOX.start), 'happy', 2500)
 
@@ -252,22 +254,27 @@ const xoxMove = async ($: any, i: number) => {
 
   if (!g.on) return
 
-  // oyun bittiyse bir sonraki tıklama yeni oyun başlatır
+  // oyun bittiyse bir sonraki tıklama yeni oyun başlatır; kaybeden başlar
   if (g.result !== '') {
-    await update($, xox, () => ({ on: true, board: EMPTY, result: '' }))
-    await sayText($, pick(XOX.start), 'happy', 2500)
+    const board = newGame(g.result as 'X' | 'O' | 'draw')
+    await update($, xox, () => ({ on: true, board, result: '', streak: g.streak, cheated: false }))
+    await sayText($, pick(board === EMPTY ? XOX.start : XOX.botStart), 'happy', 2500)
 
     return
   }
 
-  const r = play(g.board, i)
+  // oyuncu üst üste iki kez yendiyse, üçüncü kazanan hamlede karakter hile yapar
+  const r = play(g.board, i, Math.random, g.streak >= 2)
 
   if (!r.moved) return
 
-  await wake($)
-  await update($, xox, () => ({ on: true, board: r.board, result: r.result }))
+  const streak = r.result === 'X' ? g.streak + 1 : r.result === 'O' ? 0 : g.streak
 
-  if (r.result === 'X') await sayText($, pick(XOX.lose), 'cry', 6000)
+  await wake($)
+  await update($, xox, () => ({ on: true, board: r.board, result: r.result, streak, cheated: r.cheated }))
+
+  if (r.cheated) await sayText($, pick(XOX.cheat), 'laugh', 5000)
+  else if (r.result === 'X') await sayText($, pick(XOX.lose), 'cry', 6000)
   else if (r.result === 'O') await sayText($, pick(XOX.win), 'laugh', 4000)
   else if (r.result === 'draw') await sayText($, pick(XOX.draw), 'angry', 3500)
 }
@@ -651,7 +658,7 @@ export const register: Register = on => {
           </Box>
         ))}
         <Text dimColor>
-          {g.result === 'X' ? 'Sen kazandın' : g.result === 'O' ? 'Ben kazandım' : g.result === 'draw' ? 'Berabere' : 'Sıra sende (X)'}
+          {g.result === 'X' ? 'Sen kazandın' : g.cheated ? 'Ben kazandım (X ile O yer değiştirdi)' : g.result === 'O' ? 'Ben kazandım' : g.result === 'draw' ? 'Berabere' : 'Sıra sende (X)'}
         </Text>
       </Box>
     ) : null

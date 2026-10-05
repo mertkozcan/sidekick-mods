@@ -12,7 +12,7 @@ ve **Java** (kahve bardağı).
 - Çalışırken dönen komik fiiller ve süre, boştayken rastgele jestler
 - Tehlikeli komuta panik, test sonucuna tepki, düzenlenen koda bakıp yorum, commit/mola/bağlam hatırlatması
 - Fare takibi, isteğe bağlı ses (bip ya da konuşma)
-- XOX oyunu: kazanırsan ağlar, kaybedersen seninle dalga geçer
+- XOX oyunu: kazanırsan ağlar, kaybedersen seninle dalga geçer; kaybeden bir sonraki oyunu başlatır, üst üste yenersen hile yapıp X ile O'ların yerini değiştirir
 
 ### Kurulum
 

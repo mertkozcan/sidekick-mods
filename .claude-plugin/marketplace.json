@@ -7,7 +7,7 @@
       "name": "sidekick",
       "source": "./plugins/sidekick",
       "description": "Clippy, Stajyer ve Java karakterleriyle kod yazarken yanda duran eğlenceli panel",
-      "version": "0.3.1",
+      "version": "0.4.0",
       "category": "fun",
       "tags": ["mod", "pane", "fun", "companion"]
     }
