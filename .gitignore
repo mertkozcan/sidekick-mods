@@ -1,0 +1,8 @@
+# motorun ürettiği tip kopyaları ve yerel dosyalar
+**/.claude-plugin/types/
+**/tsconfig.json
+node_modules/
+*.zip
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,15 @@
+{
+  "name": "sidekick-mods",
+  "owner": { "name": "Mert Kaan Özcan" },
+  "description": "Kod yazarken yanında duran, eğlendiren, arada yardım eden yan arkadaş modları",
+  "plugins": [
+    {
+      "name": "sidekick",
+      "source": "./plugins/sidekick",
+      "description": "Clippy, Stajyer ve Java karakterleriyle kod yazarken yanda duran eğlenceli panel",
+      "version": "0.2.0",
+      "category": "fun",
+      "tags": ["mod", "pane", "fun", "companion"]
+    }
+  ]
+}
