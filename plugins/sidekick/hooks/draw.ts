@@ -108,8 +108,8 @@ const faceSvg = (m: Mood, isTalking: boolean) => {
       )
     case 'cry': {
       // ağlıyor: kaşlar içe doğru yukarıda, ağız aşağı, iki gözden yaş akar
-      const tear = (cx: number, begin: string) =>
-        `<ellipse cx="${cx}" cy="78" rx="3.5" ry="5" fill="#7dd3fc" stroke="#0284c7" stroke-width="1.5"><animate attributeName="cy" values="78;112;112" dur="1.2s" begin="${begin}" repeatCount="indefinite"/><animate attributeName="opacity" values="1;1;0" dur="1.2s" begin="${begin}" repeatCount="indefinite"/></ellipse>`
+      const tear = (cx: number, dur: string) =>
+        `<ellipse cx="${cx}" cy="78" rx="3.5" ry="5" fill="#7dd3fc" stroke="#0284c7" stroke-width="1.5"><animate attributeName="cy" values="78;112;112" dur="${dur}" repeatCount="indefinite"/><animate attributeName="opacity" values="1;1;0" dur="${dur}" repeatCount="indefinite"/></ellipse>`
 
       return (
         eyeball(44, 11, 4, false) +
@@ -117,8 +117,8 @@ const faceSvg = (m: Mood, isTalking: boolean) => {
         ink('M32 48 Q44 38 56 34', 3) +
         ink('M64 34 Q76 38 88 48', 3) +
         (flap ? openMouth(60, 100, 10, 8, true) : ink('M48 102 Q60 90 72 102', 3)) +
-        tear(40, '0s') +
-        tear(80, '0.5s')
+        tear(40, '1.2s') +
+        tear(80, '1.7s')
       )
     }
     case 'sleepy':

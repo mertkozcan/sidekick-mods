@@ -269,3 +269,22 @@ test('XOX: kareye basınca X konur, rakip karşılık verir', async ($, on) => {
   expect(o).toBe(1)
   await ui.unmount()
 })
+
+test('her karakter ve ruh hali için SVG geçerli: aynı etikette tekrar eden özellik yok', async () => {
+  const { characterSvg, ctx } = await import('../hooks/draw')
+  ctx.phase = 3.3
+  ctx.scanMode = 'idle'
+  ctx.gestureNow = ''
+  const moods = ['normal', 'happy', 'angry', 'panic', 'sleepy', 'laugh', 'peek', 'cry'] as const
+  for (const w of ['clippy', 'stajyer', 'java'] as const) {
+    for (const m of moods) {
+      for (const walking of [false, true]) {
+        const svg = characterSvg(w, m, true, 'day', walking, 'Deneme metni')
+        for (const tag of svg.match(/<[a-zA-Z][^>]*>/g) ?? []) {
+          const names = [...tag.matchAll(/s([w:-]+)="/g)].map(x => x[1])
+          expect({ w, m, tag, dup: names.length - new Set(names).size }).toEqual({ w, m, tag, dup: 0 })
+        }
+      }
+    }
+  }
+})
