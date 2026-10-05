@@ -44,6 +44,10 @@ panel yan tarafta kendiliğinden açılır.
 - Mod, kullanıcının yetkileriyle çalışır; sandbox yoktur (tüm modlar için geçerli).
 - "Clippy" göndermesi dışında Microsoft ile bağlantısı yoktur; tüm çizimler koddan üretilir.
 
+### Lisans
+
+MIT, bkz. `LICENSE`.
+
 ### Geliştirme
 
 ```
