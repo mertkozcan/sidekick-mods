@@ -281,7 +281,7 @@ test('her karakter ve ruh hali için SVG geçerli: aynı etikette tekrar eden ö
       for (const walking of [false, true]) {
         const svg = characterSvg(w, m, true, 'day', walking, 'Deneme metni')
         for (const tag of svg.match(/<[a-zA-Z][^>]*>/g) ?? []) {
-          const names = [...tag.matchAll(/s([w:-]+)="/g)].map(x => x[1])
+          const names = [...tag.matchAll(/\s([\w:-]+)="/g)].map(x => x[1])
           expect({ w, m, tag, dup: names.length - new Set(names).size }).toEqual({ w, m, tag, dup: 0 })
         }
       }
